@@ -1,0 +1,35 @@
+{
+  "author": "William Davenport Adams",
+  "name": "The old man's home",
+  "cover_image": "cover",
+  "chapters": [
+    {
+      "number": 1,
+      "title": "Chapter I",
+      "audio_file": "chapter_1",
+      "image": "cover",
+      "summary": "Old man longs for heavenly home, speaks of life's journey and loss."
+    },
+    {
+      "number": 2,
+      "title": "Chapter II",
+      "audio_file": "chapter_2",
+      "image": "chapter_2",
+      "summary": "Old man, Robin, revealed to be insane, yet yearns for 'home'."
+    },
+    {
+      "number": 3,
+      "title": "Chapter III",
+      "audio_file": "chapter_3",
+      "image": "chapter_3",
+      "summary": "Robin's past revealed, faith brings peace in his confined life."
+    },
+    {
+      "number": 4,
+      "title": "Test Chapter",
+      "audio_file": "test",
+      "image": "",
+      "summary": "This chapter serves as a test case for validating the looping and continuous playback features of the book application."
+    }
+  ]
+}
