@@ -13,7 +13,6 @@ class LiveAudioPlayer: NSObject, AVAudioPlayerDelegate {
     private var pausedTime: TimeInterval = 0
 
     let subject: PassthroughSubject<Bool, Never> = .init()
-//    private var cancellables: Set<AnyCancellable> = []
     
     func play(fileName: String, atTime: Double) async throws {
         guard let url = Bundle.main.url(forResource: fileName, withExtension: "mp3") else {
@@ -51,13 +50,16 @@ class LiveAudioPlayer: NSObject, AVAudioPlayerDelegate {
 
     func fastForward(timeInterval: TimeInterval) throws {
         guard let audioPlayer = audioPlayer else { return }
-        audioPlayer.currentTime = min(audioPlayer.duration, audioPlayer.currentTime + timeInterval)
-        print("player current time:\(audioPlayer.currentTime)")
+        let newTime = min(audioPlayer.duration, audioPlayer.currentTime + timeInterval)
+        audioPlayer.currentTime = newTime
+        pausedTime = audioPlayer.currentTime
     }
-
+    
     func rewind(timeInterval: TimeInterval) throws {
         guard let audioPlayer = audioPlayer else { return }
-        audioPlayer.currentTime = max(0, audioPlayer.currentTime - timeInterval)
+        let newTime = max(0, audioPlayer.currentTime - timeInterval)
+        audioPlayer.currentTime = newTime
+        pausedTime = audioPlayer.currentTime
     }
 
     func changeSpeed(speed: Double) throws {

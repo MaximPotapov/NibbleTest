@@ -90,7 +90,6 @@ struct PlayerFeature {
         case setShowSpeedOptions(Bool)
         case fetchAudioDuration(TimeInterval)
         case fetchCurrentTime(TimeInterval)
-        case fetchCurrentProgress(Double)
         case updateSliderValue(Double)
         case seek(Double)
         case audioPlaybackFinished(Bool)
@@ -168,9 +167,8 @@ struct PlayerFeature {
             case .forward10SecondsTapped:
                 return .run { send in
                     try await audioPlayerProvider.fastForward(10)
-                    await send(.fetchCurrentTime(try await audioPlayerProvider.currentTime()))
                     if try await audioPlayerProvider.currentTime() > 0 {
-                        await send(.fetchCurrentProgress(try await audioPlayerProvider.currentTime() / audioPlayerProvider.duration()))
+                        await send(.fetchCurrentTime(try await audioPlayerProvider.currentTime()))
                     }
                 }
 
@@ -235,6 +233,7 @@ struct PlayerFeature {
 
             case .resumeAudio:
                 state.isPlaying = true
+                
                 Task {
                     try await audioPlayerProvider.resume()
                 }
@@ -250,10 +249,7 @@ struct PlayerFeature {
 
             case .fetchCurrentTime(let time):
                 state.currentTime = time
-                return .none
-
-            case .fetchCurrentProgress(let progress):
-                state.progress = progress
+                state.sliderValue = time / state.currentDuration
                 return .none
 
             case .updateSliderValue(let progress):
@@ -266,7 +262,6 @@ struct PlayerFeature {
                 return .run { send in
                     try await audioPlayerProvider.seek(targetTime)
                     await send(.fetchCurrentTime(targetTime))
-                    await send(.fetchCurrentProgress(progress))
                 }
 
             case .audioPlaybackFinished(let success):

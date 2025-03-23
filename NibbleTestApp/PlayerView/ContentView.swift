@@ -89,8 +89,9 @@ struct ContentView: View {
         
             Slider(
                 value: $store.sliderValue.sending(\.updateSliderValue),
-                in: 0...Double(store.currentDuration)
+                in: 0...1
             )
+            .disabled(true)
             
             Text(self.chapterDuration(duration: store.currentDuration))
                 .font(.caption)
