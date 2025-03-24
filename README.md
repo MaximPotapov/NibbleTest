@@ -43,17 +43,5 @@ The application leverages TCA for the view and feature management of the screen.
 - Add a feature to select a specific chapter from a list of all chapters.
 - Implement an option to play audio when the device is locked or when the app is in the background.
 
-## Faced Issues
-During development, I encountered challenges with updating the audio duration while the user interacts with the slider. The slider is currently disabled for user interaction due to issues with two-way data binding, which is essential for synchronizing the audio's current time with the slider's position in real-time.
-
-![Screenshot ](https://github.com/user-attachments/assets/4697f46e-49e1-466f-a141-28f7f1aa43fa)
-
-### Suggested Steps to Resolve the Issue
-1. **User Interaction with the Slider:** When the user drags the slider, the new value should be passed into a reducer to ensure a clear data flow.
-2. **Update Audio File Current Time:** The reducer should update the audio player's current time based on the new slider value, allowing playback to fast forward or rewind.
-3. **Request Updated Current Time:** After updating, the reducer should query the audio player for the new `currentTime` to ensure the latest playback position is known.
-4. **Calculate and Update State:** The reducer should calculate the new progress and update the slider value and current time in the application state, ensuring a smooth user experience.
-
-
 ```
 
