@@ -10,7 +10,8 @@ import ComposableArchitecture
 
 struct ContentView: View {
     @SwiftUI.Bindable var store: StoreOf<PlayerFeature>
-    
+    @State private var localSliderValue: Double? = nil
+
     var body: some View {
             ZStack {
                 Color.primaryBackground
@@ -88,10 +89,18 @@ struct ContentView: View {
                 .foregroundColor(.gray)
         
             Slider(
-                value: $store.sliderValue.sending(\.updateSliderValue),
-                in: 0...1
+                value: Binding(
+                    get: { localSliderValue ?? store.sliderValue },
+                    set: { localSliderValue = $0 }
+                ),
+                in: 0 ... 1,
+                onEditingChanged: { editing in
+                    if !editing, let finalValue = localSliderValue {
+                        store.send(.updateSliderValue(finalValue))
+                        localSliderValue = nil
+                    }
+                }
             )
-            .disabled(true)
             
             Text(self.chapterDuration(duration: store.currentDuration))
                 .font(.caption)

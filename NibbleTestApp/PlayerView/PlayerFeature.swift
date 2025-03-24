@@ -60,7 +60,6 @@ struct PlayerFeature {
         // scene events
         case loadBook
         case playAudio(String)
-        case timerTick
         case dismissAlert
         case displayAlert
 
@@ -89,9 +88,8 @@ struct PlayerFeature {
         case resumeAudio
         case setShowSpeedOptions(Bool)
         case fetchAudioDuration(TimeInterval)
-        case fetchCurrentTime(TimeInterval)
+        case setCurrentTime(TimeInterval)
         case updateSliderValue(Double)
-        case seek(Double)
         case audioPlaybackFinished(Bool)
     }
     
@@ -117,11 +115,6 @@ struct PlayerFeature {
                     await send(.observeCurrentDuration)
                     await send(.observePlayerClient)
                     await send(.fetchAudioDuration(try await audioPlayerProvider.duration()))
-                }
-
-            case .timerTick:
-                return .run { send in
-                    await send(.fetchCurrentTime(try await audioPlayerProvider.currentTime()))
                 }
 
             case .dismissAlert:
@@ -165,17 +158,13 @@ struct PlayerFeature {
                 return .send(state.isPlaying ? .pauseAudio : .resumeAudio)
 
             case .forward10SecondsTapped:
-                return .run { send in
+                return .run { _ in
                     try await audioPlayerProvider.fastForward(10)
-                    if try await audioPlayerProvider.currentTime() > 0 {
-                        await send(.fetchCurrentTime(try await audioPlayerProvider.currentTime()))
-                    }
                 }
 
             case .backward5SecondsTapped:
-                return .run { send in
+                return .run { _ in
                     try await audioPlayerProvider.rewind(5)
-                    await send(.fetchCurrentTime(try await audioPlayerProvider.currentTime()))
                 }
 
             case .previousButtonTapped:
@@ -209,15 +198,16 @@ struct PlayerFeature {
             case .observeCurrentDuration:
                 return .run { send in
                     while !Task.isCancelled {
-                        await send(.timerTick)
-                        try await self.clock.sleep(for: .seconds(1))
+                        try await self.clock.sleep(for: .seconds(1.0))
+                        let currentTime = try await audioPlayerProvider.currentTime()
+                        await send(.setCurrentTime(currentTime))
                     }
                 }
                 .cancellable(id: CancelID.progress)
 
             case .observePlayerClient:
                 return .run { send in
-                    for await value in audioPlayerProvider.didFinishPlaying.first().values {
+                    for await value in audioPlayerProvider.didFinishPlaying.eraseToAnyPublisher().first().values {
                         await send(.audioPlaybackFinished(value))
                     }
                 }
@@ -226,18 +216,16 @@ struct PlayerFeature {
                 // Player Effects
             case .pauseAudio:
                 state.isPlaying = false
-                Task {
+                return .run { _ in
                     try await audioPlayerProvider.pause()
                 }
-                return .none
 
             case .resumeAudio:
                 state.isPlaying = true
                 
-                Task {
+                return .run { _ in
                     try await audioPlayerProvider.resume()
                 }
-                return .none
 
             case .setShowSpeedOptions(let show):
                 state.isShowingSpeedOptions = show
@@ -247,23 +235,16 @@ struct PlayerFeature {
                 state.currentDuration = duration
                 return .none
 
-            case .fetchCurrentTime(let time):
+            case .setCurrentTime(let time):
                 state.currentTime = time
                 state.sliderValue = time / state.currentDuration
                 return .none
 
             case .updateSliderValue(let progress):
-                state.sliderValue = progress
-                return .none
-            
-            case .seek(let progress):
-                let targetTime = max(0, min(progress * state.currentDuration, state.currentDuration))
-
-                return .run { send in
-                    try await audioPlayerProvider.seek(targetTime)
-                    await send(.fetchCurrentTime(targetTime))
+                return .run { _ in
+                    try await audioPlayerProvider.seek(progress)
                 }
-
+               
             case .audioPlaybackFinished(let success):
                 return .merge(
                     .cancel(id: ObservePlayerClientID.chapter),
@@ -314,4 +295,3 @@ private extension PlayerFeature {
         await send(.setShowSpeedOptions(false))
     }
 }
-
